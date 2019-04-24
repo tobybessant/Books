@@ -2,16 +2,16 @@
 var express = require('express');
 var fs = require('fs');
 
-// retrieve library data
+// retrieve library data store
 var data = fs.readFileSync('library.json');
 var library = JSON.parse(data);
 console.log('data retrieved. . .');
 
-// create and start server
+// create and start express server
 var app = express();
 var server = app.listen(3000, () => console.log('listening. . . '));
 
-// host splashpage
+// host public contents
 app.use(express.static('public'));
 
 // define get request routes
@@ -21,7 +21,8 @@ app.get('/library/search/score/:score?', searchScore);
 app.get('/library/add/:title/:score?', addBook);
 
 // -- REQUEST FUNCTIONS -- //
-// all books
+
+// fetch all books
 function fetchAll(request, response){
     response.send(library);
 }
