@@ -1,6 +1,5 @@
-// and here's the trick (works everywhere)
+// jquery-less html onready event
 function r(f){/in/.test(document.readyState)?setTimeout('r('+f+')',9):f()}
-// use like
 
 r(function(){
     // render all saved books on load of page
