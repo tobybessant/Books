@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+    <head>
+        <meta charset="utf-8">
+        <title>My_Library</title>
+        <link rel="stylesheet" href="main.css">
+        <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.8.1/css/all.css" integrity="sha384-50oBUHEmvpQ+1lW4y57PTFmhCaXp0ML5d60M1M7uH2+nqUivzIebhndOJK28anvf" crossorigin="anonymous">
+    </head>
+    <body>
+        <div class="app">
+            <div class="container">
+                <div id="heading">
+                    <h1>Hi, Toby.</h1>
+                    <h2>Welcome to your library.</h2>
+                </div>
+
+                <div class="user-inputs">
+                    <div id="add-books" class="input-group">
+                        <i id="search-state" class="fas fa-search"></i>
+                        <div class="add-fields">
+                            <input id="title" type="text" name="title" placeholder="Title" value="">
+                            <input id="score" type="text" name="score" placeholder="Score" value="">
+                        </div>
+                        <p id="add-button" class="text-button">Add</p>
+                    </div>
+                    <div id="search-books" class="input-group hidden">
+                        <i id="add-state" class="fas fa-plus"></i>
+                        <input id="search" type="text" name="search" placeholder="Search by Book Title or Score" value="">
+                        <p id="search-button" class="text-button">Search</p>
+                    </div>
+                </div>
+                <div class="status-indicator">
+                        <p id="error"></p>
+                        <div id="clear-button">
+                            <p>Clear Search</p>
+                        </div>
+                </div>
+                <div id="book-list">
+                </div>
+            </div>
+        </div>
+        <script type="text/javascript" src="viewmodel.js"></script>
+    </body>
+</html>
