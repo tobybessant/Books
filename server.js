@@ -1,5 +1,6 @@
 // reqiure packages
 var express = require('express');
+var bodyparser = require('body-parser');
 var fs = require('fs');
 
 // retrieve library data store
@@ -9,6 +10,8 @@ console.log('data retrieved. . .');
 
 // create and start express server
 var app = express();
+app.use(bodyparser.urlencoded({ extended: false }));
+app.use(bodyparser.json());
 var server = app.listen(3000, () => console.log('listening. . . '));
 
 // host public contents
@@ -18,7 +21,8 @@ app.use(express.static('public'));
 app.get('/library', fetchAll);
 app.get('/library/search/title/:title?', searchTitle);
 app.get('/library/search/score/:score?', searchScore);
-app.get('/library/add/:title/:score?', addBook);
+//
+app.post('/library/add/:title/:author/:score?', addBook);
 
 // -- REQUEST FUNCTIONS -- //
 
@@ -91,46 +95,62 @@ function searchScore(request, response){
 //add book
 function addBook(request, response){
     // parse paramters
-    title = request.params.title;
-    score = request.params.score ? Number(request.params.score) : null;
+    title = request.body.title;
+    author = request.body.author;
+    score = request.body.score ? Number(request.params.score) : null;
 
-    // if valid input received add book
-    if(title && score){
-        if(!library[title]){
-            // book does not exist, add
-            library[title] = score;
-            var data = JSON.stringify(library);
-            fs.writeFile('library.json', data, function(){
-                console.log('Add operation complete.');
+    if(title && author){
+        // fetch and update id index
+        var id = ++library.id_index;
+        id = id.toString();
 
-                // create result
-                var result = {
-                    status:"success",
-                    message: "Book added",
-                    title: title,
-                    score: score
-                }
+        // construct new book
+        let new_book = {
+            "id": id.toString(),
+            "title": title,
+            "author": author,
+            "score": score
+        };
 
-                response.send(result);
-            });
-        } else {
-            // book exists, update score
-            library[title] = score;
-            var data = JSON.stringify(library, null, 2);
-            fs.writeFile('library.json', data, function() {
+        // add book to library
+        library.books.push(new_book);
 
-                console.log('Update operation complete.')
+        // stringify to access writefile stream
+        var data = JSON.stringify(library);
+        fs.writeFile('library.json', data, function(){
+            console.log('Book added with ID:' + id);
 
-                // create result
-                var result = {
-                    status:"success",
-                    message: "Book score updated",
-                    title: title,
-                    new_score: score
-                }
+            // create return success result
+            var result = {
+                status:"success",
+                message: "Book added",
+                title: title,
+                score: score,
+                id: id
+            }
 
-                response.send(result);});
+            // return result to client
+            response.send(result);
+        });
+        /*
+        // book exists, update score
+        library[title] = score;
+        var data = JSON.stringify(library, null, 2);
+        fs.writeFile('library.json', data, function() {
+
+            console.log('Update operation complete.')
+
+            // create result
+            var result = {
+                status:"success",
+                message: "Book score updated",
+                title: title,
+                new_score: score
+            }
+
+            response.send(result);});
         }
+        */
     } else {
         var result = {
             status:"failure",

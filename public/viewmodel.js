@@ -1,3 +1,6 @@
+// require ajax for ajax calls
+ajax = require('ajax');
+
 // jquery-less html onready event
 function r(f){/in/.test(document.readyState)?setTimeout('r('+f+')',9):f()}
 
@@ -49,7 +52,7 @@ function render_all(){
         if (request.status >= 200 && request.status < 400) {
             // parse data as json and render to view
             var data = JSON.parse(request.responseText);
-            render(data, "keyvalue");
+            render(data.books, "list");
         } else {
             // reached server, but it returned an error
             set_error("failure", "Internal servor error.");
@@ -81,10 +84,24 @@ function add_book(){
     title = document.getElementById('title').value;
     score = document.getElementById('score').value;
 
-    // setup new request at the add route
-    var request = new XMLHttpRequest();
-    params = '/' + title + '/' + score;
-    request.open('GET', 'library/add' + params, true);
+    // setup new data object to post
+    params = {
+        "title": title,
+        "author": "testing placeholder",
+        "score": score
+    };
+
+    ajax.post('/library/add', params, function(){
+        render_all();
+    });
+    //
+    /*
+    request.onreadystatechange = function() {
+        //Call a function when the state changes.
+        if(request.readyState == 4 && http.status == 200) {
+            alert(request.responseText);
+        }
+    }
 
     // setup callback to process request
     request.onload = function() {
@@ -108,6 +125,7 @@ function add_book(){
 
     // send request to specified route
     request.send();
+    */
 }
 
 // function to manage the switching of input state
