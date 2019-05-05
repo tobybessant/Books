@@ -138,3 +138,6 @@ input:focus{
     text-decoration: underline;
     cursor: pointer;
 }
+#book-id {
+    display:none;
+}

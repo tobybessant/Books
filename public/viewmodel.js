@@ -1,9 +1,5 @@
-// require ajax for ajax calls
-ajax = require('ajax');
-
 // jquery-less html onready event
 function r(f){/in/.test(document.readyState)?setTimeout('r('+f+')',9):f()}
-
 r(function(){
     // render all saved books on load of page
     render_all();
@@ -18,8 +14,8 @@ r(function(){
     add = document.getElementById('add-button');
     add.addEventListener('click', add_book);
 
-    search = document.getElementById('search-button');
-    search.addEventListener('click', run_search);
+    search = document.getElementById('search');
+    search.addEventListener('keyup', run_search);
 
     clear_search = search = document.getElementById('clear-button');
     clear_search.addEventListener('click', clear_search_results);
@@ -52,7 +48,7 @@ function render_all(){
         if (request.status >= 200 && request.status < 400) {
             // parse data as json and render to view
             var data = JSON.parse(request.responseText);
-            render(data.books, "list");
+            render(data.books);
         } else {
             // reached server, but it returned an error
             set_error("failure", "Internal servor error.");
@@ -85,47 +81,15 @@ function add_book(){
     score = document.getElementById('score').value;
 
     // setup new data object to post
-    params = {
+    new_book = {
         "title": title,
         "author": "testing placeholder",
         "score": score
     };
 
-    ajax.post('/library/add', params, function(){
+    $.post("library/add", new_book, function( data ) {
         render_all();
     });
-    //
-    /*
-    request.onreadystatechange = function() {
-        //Call a function when the state changes.
-        if(request.readyState == 4 && http.status == 200) {
-            alert(request.responseText);
-        }
-    }
-
-    // setup callback to process request
-    request.onload = function() {
-        // check successful request
-        if (request.status >= 200 && request.status < 400) {
-            // inject success msg into label somewhere
-
-            // re-render all books and reset form fields
-            render_all();
-            document.getElementById('title').value = "";
-            document.getElementById('score').value = "";
-        } else {
-            set_error("failure", "Internal servor error.");
-        }
-    };
-
-    // setup callback to process connection error
-    request.onerror = function() {
-        set_error("failure", "Failed to connect to data store.");
-    };
-
-    // send request to specified route
-    request.send();
-    */
 }
 
 // function to manage the switching of input state
@@ -157,47 +121,17 @@ function run_search(){
     }
 }
 
-// make search by title request
-function search_title(title){
-    // set up new request to specified search route using input parameter
-    var request = new XMLHttpRequest();
-    route = '/library/search/title/' + title;
-    request.open('GET', route, true);
+function search_title(query){
+    if(query){
+        route = '/library/search/title/';
+        params = {
+            "query": query
+        };
 
-    // setup request callback
-    request.onload = function() {
-        if (request.status >= 200 && request.status < 400) {
-            // successful request will parse the response
-            var data = JSON.parse(request.responseText);
-            // check for failure in the response
-            if(data.status == "success"){
-                // capture response values
-                var title = data.title;
-                var score = data.score;
-                // add to map to be rendered
-                results = {
-                    [title]: score
-                };
-                render(results, "keyvalue");
-
-                // clear any errors from previous search
-                clear_error();
-            } else {
-                set_error(data.status, data.message);
-            }
-        } else {
-            // throw internal server error
-            set_error("failure", "Internal servor error.");
-        }
-    };
-
-    // setup error callback
-    request.onerror = function() {
-        // throw connection error
-        set_error("failure", "Failed to connect to data store.");
-    };
-
-    request.send();
+        $.get(route, params, function(data){
+            render(data.books);
+        });
+    }
 }
 
 // make search by score request
@@ -217,7 +151,7 @@ function search_score(score){
                 // clear any pre-existing errors
                 clear_error();
                 // render results
-                render(data.result, "list");
+                render(data.result);
             }
         } else {
             // throw internal server error
@@ -237,41 +171,20 @@ function search_score(score){
 // NOTE: currently this function takes a parameter 'type' to identify what format
 // the response should be rendered. This is due to an inconsistency in return
 // format of the search functions.
-function render(books, type){
-    // if type is keyvalue then 'books' is a map where each title is the key, and the score is the value
-    if(type == "keyvalue"){
-        // initialise injection string
-        var html_injection = "";
+function render(books){
+    // initialise injection string
+    var html_injection = "";
 
-        // fetch all keys (book titles) as a list for iteration
-        var keys = Object.keys(books);
+    // iterate books json list and extract the properties
+    for(var i = 0; i < books.length; i++){
+        book = books[i];
+        id = book.id;
+        title = book.title;
+        score = book.score;
 
-        // iterate list of books to build injection string
-        for(var i = 0; i < keys.length; i++){
-            book = keys[i];
-            score = books[book];
-
-            html_injection += "<div id='" + i + "' class='book'><div class='book-title'><h3>" + book + "</h3><p class='remove-button'>Remove</p></div><p>" + score + "</p></div>";
-        }
-        // post injection string to the book list view
-        document.getElementById('book-list').innerHTML = html_injection;
-    } else if(type == "list"){
-        // if the type is list then 'books' is a json list where each book property is assigned its own key
-        // this return format is preferred and will be applied to other areas of the app in future updates
-
-        // initialise injection string
-        var html_injection = "";
-
-        // iterate books json list and extract the properties
-        for(var i = 0; i < books.length; i++){
-            book = books[i];
-            title = book.title;
-            score = book.score;
-
-            // build injection string
-            html_injection += "<div id='" + i + "' class='book'><div class='book-title'><h3>" + title + "</h3><p class='remove-button'>Remove</p></div><p>" + score + "</p></div>";
-        }
-        // post injection string to the books list view
-        document.getElementById('book-list').innerHTML = html_injection;
+        // build injection string
+        html_injection += "<div class='book'><div class='book-title'><h3>" + title + "</h3><p id='" + id + "' class='remove-button'>Remove</p></div><p>" + score + "</p></div>";
     }
+    // post injection string to the books list view
+    document.getElementById('book-list').innerHTML = html_injection;
 }

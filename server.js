@@ -19,12 +19,14 @@ app.use(express.static('public'));
 
 // define get request routes
 app.get('/library', fetchAll);
-app.get('/library/search/title/:title?', searchTitle);
+app.get('/library/search/title?', searchTitle);
 app.get('/library/search/score/:score?', searchScore);
-//
-app.post('/library/add/:title/:author/:score?', addBook);
 
-// -- REQUEST FUNCTIONS -- //
+// define post route to add books
+app.post('/library/add', addBook);
+
+// define delete route to delete books
+app.delete('/library/delete', deleteBook);
 
 // fetch all books
 function fetchAll(request, response){
@@ -34,31 +36,33 @@ function fetchAll(request, response){
 // search using title
 function searchTitle(request, response){
     // get search query
-    var title = request.params.title;
-    if(!title){
+    var query = request.param('query');
+
+    if(!query){
         var result = {
             status:"failure",
             message: "Invalid or null search parameter",
-            title: title,
-            score: library[title]
+            query: query
         }
     } else {
-        // if existing then return data
-        if(library[title]){
-            var result = {
-                status:"success",
-                title: title,
-                score: library[title]
-            }
-        } else {
-            // if title does not exist return not found
-            var result = {
-                status:"failure",
-                message :"Book does not exist in the library.",
-                title: title
+        // if existing then setup success response
+        result = {
+            status: "success",
+            query: query,
+            books: []
+        };
+
+        // perform search
+        for(var i = 0; i < library.books.length; i++){
+            title = library.books[i].title.toLowerCase();
+            matching = title.includes(query);
+            if(matching){
+                result.books.push(library.books[i]);
             }
         }
     }
+
+    // send response to client
     response.send(result);
 }
 
@@ -94,10 +98,11 @@ function searchScore(request, response){
 
 //add book
 function addBook(request, response){
+    console.log('addbook route');
     // parse paramters
-    title = request.body.title;
-    author = request.body.author;
-    score = request.body.score ? Number(request.params.score) : null;
+    title = request.param('title');
+    author = request.param('author');
+    score = request.param('score') ? Number(request.param('score')) : null;
 
     if(title && author){
         // fetch and update id index
@@ -132,25 +137,6 @@ function addBook(request, response){
             // return result to client
             response.send(result);
         });
-        /*
-        // book exists, update score
-        library[title] = score;
-        var data = JSON.stringify(library, null, 2);
-        fs.writeFile('library.json', data, function() {
-
-            console.log('Update operation complete.')
-
-            // create result
-            var result = {
-                status:"success",
-                message: "Book score updated",
-                title: title,
-                new_score: score
-            }
-
-            response.send(result);});
-        }
-        */
     } else {
         var result = {
             status:"failure",
@@ -158,4 +144,11 @@ function addBook(request, response){
         }
         response.send(result);
     }
+}
+
+function deleteBook(request, response){
+    var id=$(this).attr('id');
+
+    // locate and delete book
+
 }
